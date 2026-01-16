@@ -6372,20 +6372,32 @@ function replayAudio() {
     // 4. 其他輔助 Function (Timer, AI, TTS, etc.)
     // =========================================================
 
-    function startTimer() {
-        clearInterval(timerInterval);
-        timeLeft = TIME_LIMIT;
-        const bar = document.getElementById('timer-bar');
-        bar.style.width = '100%';
-        document.querySelector('.timer-container').classList.remove('timer-warning');
+function startTimer() {
+            // 重置時間顯示顏色
+            const timerDisplay = document.getElementById('timer');
+            timerDisplay.style.color = ''; 
+            
+            remainingTime = timeLimit; 
+            timerDisplay.innerText = remainingTime;
 
-        timerInterval = setInterval(() => {
-            timeLeft -= 0.1;
-            bar.style.width = `${(timeLeft / TIME_LIMIT) * 100}%`;
-            if (timeLeft <= 5) document.querySelector('.timer-container').classList.add('timer-warning');
-            if (timeLeft <= 0) timeUp();
-        }, 100);
-    }
+            timer = setInterval(() => {
+                remainingTime--;
+                timerDisplay.innerText = remainingTime;
+
+                // --- ⏰ 倒數 10 秒特效 ---
+                if (remainingTime <= 10 && remainingTime > 0) {
+                    cuteSfx.tick(); // 播放滴答聲
+                    timerDisplay.style.color = '#e74c3c'; // 變紅色
+                    timerDisplay.classList.add('pulse-red'); // (如果有動畫class的話)
+                } else if (remainingTime > 10) {
+                    timerDisplay.style.color = ''; // 正常顏色
+                }
+
+                if (remainingTime <= 0) { 
+                    revealAndEndGame('時間到'); 
+                }
+            }, 1000);
+        }
 
     function timeUp() {
         clearInterval(timerInterval);
@@ -6589,6 +6601,7 @@ function speakJapanese(text, onEndCallback = null) {
 
     const cuteSfx = {
         // 基礎發聲函數
+        
         playTone: (freq, type, duration, vol = 0.1) => {
             if (audioContext.state === 'suspended') audioContext.resume();
             const osc = audioContext.createOscillator();
@@ -6625,7 +6638,9 @@ click: () => {
             osc.start();
             osc.stop(audioContext.currentTime + 0.05);
         },
-
+tick: () => {
+                cuteSfx.playTone(800, 'triangle', 0.05, 0.3);
+            },
         // 🖱️ 滑鼠滑過 (Tick)：極短輕快的 "的"
         hover: () => {
             if (audioContext.state === 'suspended') audioContext.resume();
